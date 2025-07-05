@@ -39,6 +39,32 @@ Create and destroy instances, find instances by name, scale them up and down and
 
 Create, validate, and visualize Neo4j graph data models. Allows for model import/export from Arrows.app.
 
+## Running as an SSE server on Railway
+
+For a minimal deployment on [Railway](https://railway.app) you can expose the
+Cypher MCP server using the provided `railway_sse_server.py` helper. Install the
+`mcp-neo4j-cypher` package and start the script:
+
+```bash
+pip install mcp-neo4j-cypher
+python railway_sse_server.py
+```
+
+The script reads Neo4j connection details from the following environment
+variables:
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `NEO4J_URI` | `bolt://localhost:7687` | Neo4j connection URI |
+| `NEO4J_USERNAME` | `neo4j` | Neo4j username |
+| `NEO4J_PASSWORD` | `password` | Neo4j password |
+| `NEO4J_DATABASE` | `neo4j` | Database name |
+| `NEO4J_NAMESPACE` | _(empty)_ | Namespace prefix for tools |
+| `PORT` / `NEO4J_MCP_SERVER_PORT` | `8000` | SSE server port |
+
+This launches the server on `0.0.0.0:$PORT` and exposes an SSE endpoint at
+`/sse` that can be used by any MCP-compatible client.
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
