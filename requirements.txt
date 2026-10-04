@@ -1,2 +1,2 @@
-mcp-neo4j-cypher>=0.2.4
+mcp-neo4j-cypher==0.6.0
 neo4j>=5.26.0
