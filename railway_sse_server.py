@@ -16,15 +16,14 @@ async def main() -> None:
         ),
     )
 
-    mcp = create_mcp_server(
-        driver,
-        database=os.getenv("NEO4J_DATABASE", "neo4j"),
-        namespace=os.getenv("NEO4J_NAMESPACE", ""),
-        host=os.getenv("NEO4J_MCP_SERVER_HOST", "0.0.0.0"),
-        port=int(os.getenv("PORT", os.getenv("NEO4J_MCP_SERVER_PORT", 8000))),
-    )
-
     try:
+        mcp = create_mcp_server(
+            driver,
+            database=os.getenv("NEO4J_DATABASE", "neo4j"),
+            namespace=os.getenv("NEO4J_NAMESPACE", ""),
+            host=os.getenv("NEO4J_MCP_SERVER_HOST", "0.0.0.0"),
+            port=int(os.getenv("PORT", os.getenv("NEO4J_MCP_SERVER_PORT", 8000))),
+        )
         await mcp.run_sse_async()
     finally:
         await driver.close()

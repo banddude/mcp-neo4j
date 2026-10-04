@@ -1,0 +1,28 @@
+name: Railway SSE checks
+on:
+  pull_request:
+    paths: ['railway_sse_server.py', 'requirements.txt', 'nixpacks.toml', '.python-version', 'tests/test_railway_sse_server.py', '.github/workflows/railway-sse-ci.yml']
+  push:
+    branches: [main]
+    paths: ['railway_sse_server.py', 'requirements.txt', 'nixpacks.toml', '.python-version', 'tests/test_railway_sse_server.py', '.github/workflows/railway-sse-ci.yml']
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install -r requirements.txt
+      - name: Verify installed package call signature without connecting to a database
+        run: |
+          python - <<'PY'
+          import inspect
+          from mcp_neo4j_cypher.server import create_mcp_server
+          inspect.signature(create_mcp_server).bind(object(), database='neo4j', namespace='', host='127.0.0.1', port=8000)
+          PY
+      - run: python -m unittest discover -s tests -p 'test_railway_sse_server.py' -v
+      - run: python -m compileall -q railway_sse_server.py tests/test_railway_sse_server.py
