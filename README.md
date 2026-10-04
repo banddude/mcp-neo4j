@@ -26,6 +26,8 @@ This repository provides a minimal setup for hosting the
 The service listens on `${NEO4J_MCP_SERVER_HOST:-0.0.0.0}:$PORT` and exposes an SSE endpoint at `/sse`
 compatible with any MCP client.
 
+The wrapper targets `mcp-neo4j-cypher` 0.6.0: host and port are passed to the SSE HTTP runner, not the server factory.
+
 The Neo4j driver is closed when startup or the SSE server exits, including errors.
 
 ## Tests

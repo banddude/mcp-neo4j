@@ -13,7 +13,7 @@ class RailwayStartupTests(unittest.IsolatedAsyncioTestCase):
     def load(self, environment=None, *, server_error=None, startup_error=None):
         self.driver = types.SimpleNamespace(close=AsyncMock())
         self.driver_factory = Mock(return_value=self.driver)
-        self.server = types.SimpleNamespace(run_sse_async=AsyncMock(side_effect=server_error))
+        self.server = types.SimpleNamespace(run_http_async=AsyncMock(side_effect=server_error))
         self.create_server = Mock(return_value=self.server, side_effect=startup_error)
         neo4j = types.ModuleType('neo4j')
         neo4j.AsyncGraphDatabase = types.SimpleNamespace(driver=self.driver_factory)
@@ -35,8 +35,8 @@ class RailwayStartupTests(unittest.IsolatedAsyncioTestCase):
         module = self.load()
         await module.main()
         self.driver_factory.assert_called_once_with('bolt://localhost:7687', auth=('neo4j', 'password'))
-        self.create_server.assert_called_once_with(self.driver, database='neo4j', namespace='', host='0.0.0.0', port=8000)
-        self.server.run_sse_async.assert_awaited_once()
+        self.create_server.assert_called_once_with(self.driver, database='neo4j', namespace='')
+        self.server.run_http_async.assert_awaited_once_with(transport="sse", host="0.0.0.0", port=8000)
         self.driver.close.assert_awaited_once()
 
     async def test_url_host_and_railway_port_precedence(self):
@@ -46,14 +46,15 @@ class RailwayStartupTests(unittest.IsolatedAsyncioTestCase):
                             'NEO4J_MCP_SERVER_HOST':'127.0.0.1', 'PORT':'4567', 'NEO4J_MCP_SERVER_PORT':'9999'})
         await module.main()
         self.driver_factory.assert_called_once_with('bolt://url-fixture:7687', auth=('fixture-user', 'fixture-password'))
-        self.create_server.assert_called_once_with(self.driver, database='fixture-db', namespace='fixture', host='127.0.0.1', port=4567)
+        self.create_server.assert_called_once_with(self.driver, database='fixture-db', namespace='fixture')
+        self.server.run_http_async.assert_awaited_once_with(transport='sse', host='127.0.0.1', port=4567)
         self.driver.close.assert_awaited_once()
 
     async def test_uri_and_secondary_port_remain_supported(self):
         module = self.load({'NEO4J_URL':'', 'NEO4J_URI':'bolt://fixture:7687', 'NEO4J_MCP_SERVER_PORT':'8123'})
         await module.main()
         self.assertEqual(self.driver_factory.call_args.args[0], 'bolt://fixture:7687')
-        self.assertEqual(self.create_server.call_args.kwargs['port'], 8123)
+        self.assertEqual(self.server.run_http_async.call_args.kwargs['port'], 8123)
 
     async def test_server_failure_closes_driver_and_propagates(self):
         module = self.load(server_error=RuntimeError('synthetic serve failure'))

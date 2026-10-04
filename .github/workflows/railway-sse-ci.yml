@@ -22,7 +22,9 @@ jobs:
           python - <<'PY'
           import inspect
           from mcp_neo4j_cypher.server import create_mcp_server
-          inspect.signature(create_mcp_server).bind(object(), database='neo4j', namespace='', host='127.0.0.1', port=8000)
+          server = create_mcp_server(object(), database='neo4j', namespace='')
+          inspect.signature(server.run_http_async).bind(transport='sse', host='127.0.0.1', port=8000)
+          server.http_app(transport='sse')
           PY
       - run: python -m unittest discover -s tests -p 'test_railway_sse_server.py' -v
       - run: python -m compileall -q railway_sse_server.py tests/test_railway_sse_server.py
